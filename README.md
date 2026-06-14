@@ -1,39 +1,39 @@
-# Black Hole Screensaver
+# 黑洞屏保
 
-A real-time ray-traced Schwarzschild black hole for your Windows desktop.
+一个基于实时光线追踪的 Schwarzschild 黑洞 Windows 屏幕保护程序。
 
-Ported from [s0xDk/ghostty-blackhole](https://github.com/s0xDk/ghostty-blackhole) — originally a Ghostty terminal shader, now a standalone screensaver that needs no terminal at all.
+移植自 [s0xDk/ghostty-blackhole](https://github.com/s0xDk/ghostty-blackhole) — 原本是 Ghostty 终端的着色器，现在是独立的屏保程序，不需要任何终端。
 
-## Demo
+## 效果
 
-The black hole roams freely across your screen, growing and shrinking organically while cycling through 8 different accretion disk looks — Inferno, Gargantua, M87\* donut, Face-on ember, Quasar, Blazar, Pure lens — with smooth crossfades. Every 60-second loop is slightly different thanks to hash-based randomization.
+黑洞在屏幕上自由漫游，有机地膨胀和收缩，同时在 8 种吸积盘外观之间平滑切换 — Inferno、Gargantua、M87\* 甜甜圈、Face-on ember、Quasar、Blazar、Pure lens。每 60 秒一个循环，由于基于 hash 的随机化，每次循环都略有不同。
 
-## Physics
+## 物理
 
-Every pixel computes its own Schwarzschild null geodesic. Nothing is painted on — it all falls out of the integration:
+每个像素都在计算自己的 Schwarzschild 零测地线。没有任何东西是"画上去"的 — 一切来自积分：
 
-- **Shadow** — rays with impact parameter under `b_crit = (3√3/2) r_s` spiral into the horizon
-- **Gravitational lensing** — escaped rays bend, magnify, and mirror inside the Einstein ring
-- **Accretion disk** — Keplerian disk with Shakura–Sunyaev blackbody coloring, relativistic Doppler beaming, and gravitational time dilation
-- **Photon ring** — emergent from rays winding near `1.5 r_s`, not drawn
-- **Chromatic aberration** — blue bends slightly more than red in the weak-field region
+- **阴影** — 影响参数低于 `b_crit = (3√3/2) r_s` 的光线落入视界
+- **引力透镜** — 逃逸光线弯曲、放大，在爱因斯坦环内形成镜像
+- **吸积盘** — 开普勒盘 + Shakura–Sunyaev 黑体着色 + 相对论多普勒增亮 + 引力时间膨胀
+- **光子环** — 由绕行 `1.5 r_s` 附近的光线自然涌现，不是画出来的
+- **色差** — 弱场区域蓝色比红色弯曲略多
 
-## Download
+## 下载
 
-Grab `blackhole.scr` from the [latest release](https://github.com/gkd2323c/blackhole-screensaver/releases/latest).
+从 [最新 Release](https://github.com/gkd2323c/blackhole-screensaver/releases/latest) 下载 `blackhole.scr`。
 
-## Install
+## 安装
 
-1. Copy `blackhole.scr` to `%SYSTEMROOT%\System32\`
-2. Right-click Desktop → Personalize → Lock screen → Screen saver settings
-3. Select **Black Hole** from the dropdown
-4. Click **Settings** to adjust star brightness, disk opacity, and Doppler effect
+1. 将 `blackhole.scr` 复制到 `%SYSTEMROOT%\System32\`
+2. 右键桌面 → 个性化 → 锁屏 → 屏幕保护程序设置
+3. 在下拉列表中选择 **Black Hole**
+4. 点击 **设置** 可调整星空亮度、吸积盘透明度、多普勒效应强度
 
-Or just double-click `blackhole.scr` to preview it immediately.
+或者直接双击 `blackhole.scr` 预览效果。
 
-## Build from Source
+## 从源码编译
 
-Requires MSVC (Visual Studio Build Tools). In a Developer Command Prompt:
+需要 MSVC（Visual Studio Build Tools）。在 Developer Command Prompt 中：
 
 ```bat
 cl /O2 /W3 /nologo /D_CRT_SECURE_NO_WARNINGS /Fe:blackhole.scr ^
@@ -41,23 +41,23 @@ cl /O2 /W3 /nologo /D_CRT_SECURE_NO_WARNINGS /Fe:blackhole.scr ^
     /link /SUBSYSTEM:WINDOWS
 ```
 
-Or run `build.bat`.
+或者直接运行 `build.bat`。
 
-## How It Works
+## 工作原理
 
-A single C file (~30KB) embeds the entire GLSL fragment shader as a string literal. The Win32 host creates a fullscreen OpenGL 3.3 context, compiles the shader, and renders a fullscreen quad every frame. The vertex shader uses `gl_VertexID` to generate the quad without any vertex buffer.
+单个 C 文件（~30KB）把整个 GLSL fragment shader 作为字符串字面量内嵌。Win32 宿主创建全屏 OpenGL 3.3 上下文，编译着色器，每帧渲染一个全屏 quad。Vertex shader 用 `gl_VertexID` 生成 quad，不需要任何顶点缓冲。
 
-- **Zero dependencies** — only Win32 API + OpenGL
-- **Single .scr file** — no installer, no DLLs, no registry entries (beyond what Windows screensaver settings manage)
-- **Config dialog** — three sliders for visual tuning, stored in `HKCU\Software\BlackHoleScreensaver`
+- **零依赖** — 只用 Win32 API + OpenGL
+- **单个 .scr 文件** — 不需要安装器、DLL、注册表条目（屏保设置管理的除外）
+- **配置对话框** — 三个滑块调节视觉效果，存储在 `HKCU\Software\BlackHoleScreensaver`
 
-## System Requirements
+## 系统要求
 
-- Windows 10 or 11
-- Any GPU with OpenGL 3.3 support (virtually all GPUs made after 2010)
+- Windows 10 或 11
+- 支持 OpenGL 3.3 的显卡（2010 年后几乎所有显卡都支持）
 
-## License
+## 许可证
 
-MIT License — see [LICENSE](LICENSE).
+MIT License — 详见 [LICENSE](LICENSE)。
 
-The accretion disk shader is adapted from [s0xDk/ghostty-blackhole](https://github.com/s0xDk/ghostty-blackhole) (also MIT). The Windows screensaver host is original.
+吸积盘着色器改编自 [s0xDk/ghostty-blackhole](https://github.com/s0xDk/ghostty-blackhole)（同样 MIT License）。Windows 屏保宿主程序为原创。
