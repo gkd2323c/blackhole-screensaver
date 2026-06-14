@@ -12,11 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build with MSVC
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build
         shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cl /O2 /W3 /nologo /D_CRT_SECURE_NO_WARNINGS /Fe:blackhole.scr blackhole_screensaver.c opengl32.lib user32.lib gdi32.lib advapi32.lib shell32.lib comctl32.lib /link /SUBSYSTEM:WINDOWS
+        run: cl /O2 /W3 /nologo /D_CRT_SECURE_NO_WARNINGS /Fe:blackhole.scr blackhole_screensaver.c opengl32.lib user32.lib gdi32.lib advapi32.lib shell32.lib comctl32.lib /link /SUBSYSTEM:WINDOWS
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -41,5 +43,3 @@ jobs:
         with:
           files: blackhole.scr
           generate_release_notes: true
-          draft: false
-          prerelease: false
