@@ -468,32 +468,131 @@ static void saveConfig(void) {
 }
 
 // ============================================================ config dialog ==
-static INT_PTR CALLBACK ConfigDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+// Programmatic config dialog (no .rc resource template needed)
+#define CFG_ID_STAR_SLIDER   201
+#define CFG_ID_DISK_SLIDER   202
+#define CFG_ID_DOPPLER_SLIDER 203
+#define CFG_ID_STAR_LABEL    204
+#define CFG_ID_DISK_LABEL    205
+#define CFG_ID_DOPPLER_LABEL 206
+#define CFG_ID_STAR_VAL      207
+#define CFG_ID_DISK_VAL      208
+#define CFG_ID_DOPPLER_VAL   209
+#define CFG_ID_OK            210
+#define CFG_ID_CANCEL        211
+#define CFG_WND_CLASS "BlackHoleConfig"
+
+static void cfgUpdateLabel(HWND hwnd, int sliderId, int valId) {
+    char buf[8];
+    int pos = (int)SendDlgItemMessage(hwnd, sliderId, TBM_GETPOS, 0, 0);
+    wsprintfA(buf, "%d", pos);
+    SetDlgItemTextA(hwnd, valId, buf);
+}
+
+static LRESULT CALLBACK ConfigWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
-    case WM_INITDIALOG:
-        SendDlgItemMessage(dlg, 101, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
-        SendDlgItemMessage(dlg, 101, TBM_SETPOS, TRUE, cfg_starBrightness);
-        SendDlgItemMessage(dlg, 102, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
-        SendDlgItemMessage(dlg, 102, TBM_SETPOS, TRUE, cfg_diskOpacity);
-        SendDlgItemMessage(dlg, 103, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
-        SendDlgItemMessage(dlg, 103, TBM_SETPOS, TRUE, cfg_doppler);
-        return TRUE;
-    case WM_COMMAND:
-        if (LOWORD(wp) == IDOK) {
-            cfg_starBrightness = (int)SendDlgItemMessage(dlg, 101, TBM_GETPOS, 0, 0);
-            cfg_diskOpacity    = (int)SendDlgItemMessage(dlg, 102, TBM_GETPOS, 0, 0);
-            cfg_doppler        = (int)SendDlgItemMessage(dlg, 103, TBM_GETPOS, 0, 0);
+    case WM_CREATE: {
+        HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+        // --- labels ---
+        HWND h;
+        h = CreateWindowA("STATIC", "Star Brightness:", WS_CHILD | WS_VISIBLE, 20, 20, 110, 20, hwnd, (HMENU)(intptr_t)CFG_ID_STAR_LABEL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        h = CreateWindowA("STATIC", "Disk Opacity:", WS_CHILD | WS_VISIBLE, 20, 60, 110, 20, hwnd, (HMENU)(intptr_t)CFG_ID_DISK_LABEL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        h = CreateWindowA("STATIC", "Doppler Effect:", WS_CHILD | WS_VISIBLE, 20, 100, 110, 20, hwnd, (HMENU)(intptr_t)CFG_ID_DOPPLER_LABEL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        // --- trackbars ---
+        h = CreateWindowA(TRACKBAR_CLASSA, "", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_TOOLTIPS,
+            140, 16, 200, 30, hwnd, (HMENU)(intptr_t)CFG_ID_STAR_SLIDER, NULL, NULL);
+        SendMessage(h, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
+        SendMessage(h, TBM_SETPOS, TRUE, cfg_starBrightness);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        h = CreateWindowA(TRACKBAR_CLASSA, "", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_TOOLTIPS,
+            140, 56, 200, 30, hwnd, (HMENU)(intptr_t)CFG_ID_DISK_SLIDER, NULL, NULL);
+        SendMessage(h, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
+        SendMessage(h, TBM_SETPOS, TRUE, cfg_diskOpacity);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        h = CreateWindowA(TRACKBAR_CLASSA, "", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_TOOLTIPS,
+            140, 96, 200, 30, hwnd, (HMENU)(intptr_t)CFG_ID_DOPPLER_SLIDER, NULL, NULL);
+        SendMessage(h, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
+        SendMessage(h, TBM_SETPOS, TRUE, cfg_doppler);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        // --- value labels ---
+        char buf[8];
+        wsprintfA(buf, "%d", cfg_starBrightness);
+        h = CreateWindowA("STATIC", buf, WS_CHILD | WS_VISIBLE | SS_CENTER, 350, 20, 40, 20, hwnd, (HMENU)(intptr_t)CFG_ID_STAR_VAL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        wsprintfA(buf, "%d", cfg_diskOpacity);
+        h = CreateWindowA("STATIC", buf, WS_CHILD | WS_VISIBLE | SS_CENTER, 350, 60, 40, 20, hwnd, (HMENU)(intptr_t)CFG_ID_DISK_VAL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        wsprintfA(buf, "%d", cfg_doppler);
+        h = CreateWindowA("STATIC", buf, WS_CHILD | WS_VISIBLE | SS_CENTER, 350, 100, 40, 20, hwnd, (HMENU)(intptr_t)CFG_ID_DOPPLER_VAL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        // --- buttons ---
+        h = CreateWindowA("BUTTON", "OK", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 240, 140, 80, 28, hwnd, (HMENU)(intptr_t)CFG_ID_OK, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        h = CreateWindowA("BUTTON", "Cancel", WS_CHILD | WS_VISIBLE, 330, 140, 80, 28, hwnd, (HMENU)(intptr_t)CFG_ID_CANCEL, NULL, NULL);
+        SendMessage(h, WM_SETFONT, (WPARAM)hFont, TRUE);
+        return 0;
+    }
+    case WM_HSCROLL: {
+        HWND hTB = (HWND)lp;
+        int id = GetDlgCtrlID(hTB);
+        if (id == CFG_ID_STAR_SLIDER)   cfgUpdateLabel(hwnd, CFG_ID_STAR_SLIDER,   CFG_ID_STAR_VAL);
+        if (id == CFG_ID_DISK_SLIDER)   cfgUpdateLabel(hwnd, CFG_ID_DISK_SLIDER,   CFG_ID_DISK_VAL);
+        if (id == CFG_ID_DOPPLER_SLIDER) cfgUpdateLabel(hwnd, CFG_ID_DOPPLER_SLIDER, CFG_ID_DOPPLER_VAL);
+        return 0;
+    }
+    case WM_COMMAND: {
+        int id = LOWORD(wp);
+        if (id == CFG_ID_OK) {
+            cfg_starBrightness = (int)SendDlgItemMessage(hwnd, CFG_ID_STAR_SLIDER,   TBM_GETPOS, 0, 0);
+            cfg_diskOpacity    = (int)SendDlgItemMessage(hwnd, CFG_ID_DISK_SLIDER,   TBM_GETPOS, 0, 0);
+            cfg_doppler        = (int)SendDlgItemMessage(hwnd, CFG_ID_DOPPLER_SLIDER, TBM_GETPOS, 0, 0);
             saveConfig();
-            EndDialog(dlg, IDOK);
-            return TRUE;
+            DestroyWindow(hwnd);
+            return 0;
         }
-        if (LOWORD(wp) == IDCANCEL) {
-            EndDialog(dlg, IDCANCEL);
-            return TRUE;
+        if (id == CFG_ID_CANCEL) {
+            DestroyWindow(hwnd);
+            return 0;
         }
         break;
     }
-    return FALSE;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static void showConfigDialog(HINSTANCE hInst) {
+    WNDCLASSEXA wc = {0};
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = ConfigWndProc;
+    wc.hInstance = hInst;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.lpszClassName = CFG_WND_CLASS;
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    RegisterClassExA(&wc);
+
+    int w = 440, h = 200;
+    int sw = GetSystemMetrics(SM_CXSCREEN), sh = GetSystemMetrics(SM_CYSCREEN);
+    HWND hwnd = CreateWindowExA(WS_EX_DLGMODALFRAME, CFG_WND_CLASS,
+        "BlackHole Screensaver Settings",
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+        (sw - w) / 2, (sh - h) / 2, w, h,
+        NULL, NULL, hInst, NULL);
+    if (!hwnd) return;
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 }
 
 // ============================================================ WGL init ==
@@ -659,7 +758,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmdLine, int show
         previewParent = (HWND)(LONG_PTR)atol(cl);
     } else if (_strnicmp(cl, "/c", 2) == 0 || _strnicmp(cl, "/C", 2) == 0 || cl[0] == 0) {
         // configure
-        DialogBoxA(hInstance, NULL, NULL, ConfigDlgProc);
+        showConfigDialog(hInstance);
         return 0;
     } else if (_strnicmp(cl, "/a", 2) == 0) {
         // /a = password change — just exit
@@ -685,8 +784,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmdLine, int show
         RECT rc;
         GetClientRect(previewParent, &rc);
         style = WS_CHILD | WS_VISIBLE;
+        g_W = rc.right;
+        g_H = rc.bottom;
         hwnd = CreateWindowExA(0, "BlackHoleSCR", "", style,
-            0, 0, rc.right, rc.bottom, previewParent, NULL, hInstance, NULL);
+            0, 0, g_W, g_H, previewParent, NULL, hInstance, NULL);
         g_preview = 1;
     } else {
         // fullscreen
@@ -709,16 +810,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR cmdLine, int show
     }
 
     if (!initShader()) return 1;
-
-    if (g_preview) {
-        RECT rc;
-        GetClientRect(previewParent, &rc);
-        g_W = rc.right;
-        g_H = rc.bottom;
-    } else {
-        g_W = GetSystemMetrics(SM_CXSCREEN);
-        g_H = GetSystemMetrics(SM_CYSCREEN);
-    }
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
