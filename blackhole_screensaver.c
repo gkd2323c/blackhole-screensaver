@@ -382,6 +382,14 @@ static int loadGLFunctions(void) {
     return glCreateShader && glCreateProgram && glUseProgram && p_glGenVertexArrays;
 }
 
+static void getLogPath(char* buf, size_t sz) {
+    const char* tmp = getenv("TEMP");
+    if (!tmp) tmp = getenv("TMP");
+    if (!tmp) tmp = ".";
+    _snprintf(buf, sz, "%s\\blackhole_screensaver.log", tmp);
+    buf[sz - 1] = 0;
+}
+
 static GLuint compileShader(GLenum type, const char* src) {
     GLuint s = glCreateShader(type);
     glShaderSource(s, 1, &src, NULL);
@@ -392,9 +400,10 @@ static GLuint compileShader(GLenum type, const char* src) {
         char log[4096];
         GLint len = 0;
         glGetShaderInfoLog(s, sizeof(log), &len, log);
-        FILE* f = fopen("blackhole_shader.log", "a");
+        char path[MAX_PATH];
+        getLogPath(path, sizeof(path));
+        FILE* f = fopen(path, "a");
         if (f) { fprintf(f, "COMPILE ERROR (type %d):\n%s\n\n", type, log); fclose(f); }
-        MessageBoxA(NULL, log, "Shader Compile Error", MB_OK | MB_ICONERROR);
     }
     return s;
 }
@@ -419,10 +428,10 @@ static int initShader(void) {
         char log[4096];
         GLint len = 0;
         p_glGetProgramInfoLog(shaderProgram, sizeof(log), &len, log);
-        // write to file for debugging
-        FILE* f = fopen("blackhole_shader.log", "w");
+        char path[MAX_PATH];
+        getLogPath(path, sizeof(path));
+        FILE* f = fopen(path, "w");
         if (f) { fprintf(f, "LINK ERROR:\n%s\n\nFRAGMENT SOURCE:\n%s%s\n", log, fragHeader, shaderSource); fclose(f); }
-        MessageBoxA(NULL, log, "Shader Link Error", MB_OK | MB_ICONERROR);
         return 0;
     }
 
